@@ -1,0 +1,903 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "version": "1.0.0",
+    "title": "Test Results API",
+    "description": "API for recording and retrieving test results for Cucumber test runs",
+    "termsOfService": "Copyright DAT Solutions",
+    "contact": {
+      "name": "Jake Sarate",
+      "email": "jake.sarate@dat.com"
+    },
+    "license": {
+      "name": "MIT",
+      "url": "http://opensource.org/licenses/MIT"
+    }
+  },
+  "host": "localhost:3002",
+  "basePath": "/api",
+  "schemes": [
+    "http"
+  ],
+  "paths": {
+    "/tests": {
+      "post": {
+        "tags": [
+          "tests"
+        ],
+        "description": "Create a new Test",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "test",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/Test"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Test created"
+          },
+          "300": {
+            "description": "Test already exists",
+            "schema": {
+              "$ref": "#/definitions/Message"
+            }
+          },
+          "500": {
+            "description": "There was a server error"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "tests"
+        ],
+        "description": "Get information for a specific test",
+        "responses": {
+          "200": {
+            "description": "Get all tests",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Test"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tests/{id}": {
+      "get": {
+        "tags": [
+          "tests"
+        ],
+        "description": "Get a specific test",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "description": "The id of the test",
+            "required": true,
+            "in": "path",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful",
+            "schema": {
+              "$ref": "#/definitions/Test"
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "schema": {
+              "$ref": "#/definitions/Message"
+            }
+          },
+          "500": {
+            "description": "Server Error"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "tests"
+        ],
+        "description": "Update lastRun",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "description": "id of the test",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "test",
+            "description": "The testRunId you are setting as the lastRun",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Test"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Update Successful",
+            "schema": {
+              "$ref": "#/definitions/Test"
+            }
+          },
+          "404": {
+            "description": "Test not found",
+            "schema": {
+              "$ref": "#/definitions/Message"
+            }
+          },
+          "500": {
+            "description": "Server Error"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "tests"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "description": "The id of the test",
+            "in": "path",
+            "type": "string",
+            "required": true
+          }
+        ],
+        "description": "Delete a test",
+        "responses": {
+          "200": {
+            "description": "Delete Successful",
+            "schema": {
+              "$ref": "#/definitions/Test"
+            }
+          }
+        }
+      }
+    },
+    "/projects": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "description": "Get all projects",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Project"
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "projects"
+        ],
+        "description": "Create a new project",
+        "responses": {
+          "201": {
+            "description": "Project Successfully Created",
+            "schema": {
+              "$ref": "#/definitions/Project"
+            }
+          },
+          "403": {
+            "description": "Project already exists",
+            "schema": {
+              "$ref": "#/definitions/Message"
+            }
+          },
+          "500": {
+            "description": "Server Error"
+          }
+        }
+      }
+    },
+    "/projects/{id}": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of the project",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "description": "Get a specific Project",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/Project"
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "schema": {
+              "$ref": "#/definitions/Message"
+            }
+          },
+          "500": {
+            "description": "Server Error"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "projects"
+        ],
+        "description": "Delete a project",
+        "responses": {
+          "200": {
+            "description": "Delete Successful",
+            "schema": {
+              "$ref": "#/definitions/Project"
+            }
+          },
+          "404": {
+            "description": "Project Not Found",
+            "schema": {
+              "$ref": "#/definitions/Message"
+            }
+          }
+        }
+      }
+    },
+    "/projects/lastRun/{id}": {
+      "put": {
+        "tags": [
+          "projects"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Id of the Project",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "testRunId",
+            "in": "body",
+            "description": "the id of the test you are adding",
+            "schema": {
+              "$ref": "#/definitions/Project"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Update Successful",
+            "schema": {
+              "$ref": "#/definitions/Project"
+            }
+          },
+          "404": {
+            "description": "Project not found",
+            "schema": {
+              "$ref": "#/definitions/Message"
+            }
+          },
+          "500": {
+            "description": "Server Error"
+          }
+        }
+      }
+    },
+    "/projects/inProgress/{id}": {
+      "put": {
+        "tags": [
+          "projects"
+        ],
+        "description": "Add a testRunId to Currently Running",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID of the project",
+            "type": "string"
+          },
+          {
+            "name": "testRunId",
+            "in": "body",
+            "description": "The id of the TestRun being added",
+            "schema": {
+              "$ref": "#/definitions/Project"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Test Run added",
+            "schema": {
+              "$ref": "#/definitions/Project"
+            }
+          },
+          "404": {
+            "description": "Project Not found",
+            "schema": {
+              "$ref": "#/definitions/Message"
+            }
+          },
+          "500": {
+            "description": "Server Error"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "projects"
+        ],
+        "description": "Remove a TestRun from the currently running",
+        "responses": {
+          "200": {
+            "description": "Delete Successful",
+            "schema": {
+              "$ref": "#/definitions/Project"
+            }
+          },
+          "404": {
+            "description": "Project Not Found",
+            "schema": {
+              "$ref": "#/definitions/Message"
+            }
+          },
+          "500": {
+            "description": "Server Error"
+          }
+        }
+      }
+    },
+    "/testRuns": {
+      "get": {
+        "tags": [
+          "testRuns"
+        ],
+        "description": "Get all of the testRuns",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/TestRun"
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "testRuns"
+        ],
+        "description": "Create a new TestRun",
+        "responses": {
+          "201": {
+            "description": "TestRun created successfully",
+            "schema": {
+              "$ref": "#/definitions/TestRun"
+            }
+          },
+          "403": {
+            "description": "TestRun already exists",
+            "schema": {
+              "$ref": "#/definitions/Message"
+            }
+          },
+          "500": {
+            "description": "Server Error"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "testRuns"
+        ],
+        "description": "update a test run",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/TestRun"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Update successful",
+            "schema": {
+              "$ref": "#/definitions/TestRun"
+            }
+          },
+          "404": {
+            "description": "Test Run not found",
+            "schema": {
+              "$ref": "#/definitions/Message"
+            }
+          },
+          "500": {
+            "description": "Server Error"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "testRuns"
+        ],
+        "description": "Delete a Test Run",
+        "responses": {
+          "200": {
+            "description": "Delete successful"
+          },
+          "404": {
+            "description": "Test Run not found",
+            "schema": {
+              "$ref": "#/definitions/Message"
+            }
+          }
+        }
+      }
+    },
+    "/testRuns/project/{id}": {
+      "get": {
+        "tags": [
+          "testRuns"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "description": "the id of the project",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "description": "Get all of the test runs for a specific project",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/TestRun"
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error"
+          }
+        }
+      }
+    },
+    "/testResults": {
+      "post": {
+        "tags": [
+          "testResults"
+        ],
+        "description": "Create a Test Result",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/TestResult"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/TestResult"
+            }
+          },
+          "403": {
+            "description": "Test Result already exists",
+            "schema": {
+              "$ref": "#/definitions/Message"
+            }
+          },
+          "500": {
+            "description": "Server Error"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "testResults"
+        ],
+        "description": "Get all test results",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/TestResult"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/testResults/{id}": {
+      "get": {
+        "tags": [
+          "testResults"
+        ],
+        "description": "Get a test Result",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of the result",
+            "type": "string",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/TestResult"
+            }
+          },
+          "400": {
+            "description": "Test Result not found",
+            "schema": {
+              "$ref": "#/definitions/Message"
+            }
+          },
+          "500": {
+            "description": "Server Error"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "testResults"
+        ],
+        "description": "Update a result",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/TestResult"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Update Successful",
+            "schema": {
+              "$ref": "#/definitions/TestResult"
+            }
+          },
+          "404": {
+            "description": "Test Result not found",
+            "schema": {
+              "$ref": "#/definitions/Message"
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "testResults"
+        ],
+        "description": "Delete a result",
+        "responses": {
+          "200": {
+            "description": "Delete Successful",
+            "schema": {
+              "$ref": "#/definitions/TestResult"
+            }
+          },
+          "404": {
+            "description": "Test Result Not Found",
+            "schema": {
+              "$ref": "#/definitions/Message"
+            }
+          },
+          "500": {
+            "description": "Server Error"
+          }
+        }
+      }
+    },
+    "/testRunResults": {
+      "get": {
+        "tags": [
+          "testRunResults"
+        ],
+        "description": "Get all test run results",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/TestRunResult"
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "testRunResults"
+        ],
+        "description": "Create a new test run result",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "description": "The Test Run Result",
+            "schema": {
+              "$ref": "#/definitions/TestRunResult"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Result created",
+            "schema": {
+              "$ref": "#/definitions/TestRunResult"
+            }
+          },
+          "403": {
+            "description": "Test Run Result already exists",
+            "schema": {
+              "$ref": "#/definitions/Message"
+            }
+          },
+          "500": {
+            "description": "Server Error"
+          }
+        }
+      }
+    },
+    "/testRunResults/{id}": {
+      "get": {
+        "tags": [
+          "testRunResults"
+        ],
+        "description": "Get a specific test run result",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "The id of the test run result",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/TestRunResult"
+            }
+          },
+          "404": {
+            "description": "Test Run Result not found",
+            "schema": {
+              "$ref": "#/definitions/Message"
+            }
+          },
+          "500": {
+            "description": "Server Error"
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Message": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "Test": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "projectId": {
+          "type": "string"
+        },
+        "lastRun": {
+          "type": "string"
+        },
+        "cucumberJSON": {
+          "type": "object"
+        }
+      }
+    },
+    "Project": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "displayName": {
+          "type": "string"
+        },
+        "lastRun": {
+          "type": "string"
+        },
+        "currentlyRunning": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "status": {
+          "type": "string"
+        }
+      }
+    },
+    "TestRun": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "tests": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "projectId": {
+          "type": "string"
+        },
+        "runOptions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "status": {
+          "type": "string"
+        },
+        "primaryResults": {
+          "type": "string"
+        },
+        "rerunResults": {
+          "type": "string"
+        },
+        "startDate": {
+          "type": "string"
+        },
+        "endDate": {
+          "type": "string"
+        }
+      }
+    },
+    "TestResult": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "testId": {
+          "type": "string"
+        },
+        "projectId": {
+          "type": "string"
+        },
+        "log": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "runTime": {
+          "type": "number"
+        },
+        "status": {
+          "type": "string"
+        },
+        "startDate": {
+          "type": "string"
+        },
+        "endDate": {
+          "type": "string"
+        },
+        "errorMessage": {
+          "type": "string"
+        },
+        "failedStep": {
+          "type": "string"
+        }
+      }
+    },
+    "TestRunResult": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "testRunId": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "passCount": {
+          "type": "string"
+        },
+        "failCount": {
+          "type": "string"
+        },
+        "pendingCount": {
+          "type": "string"
+        },
+        "undefinedCount": {
+          "type": "string"
+        },
+        "failedTests": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "runTime": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "endDate": {
+          "type": "string"
+        },
+        "startDate": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

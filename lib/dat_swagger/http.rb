@@ -13,29 +13,62 @@ module DATSwagger
       @url = "http://#{host}:#{port}"
     end
 
+    #params
+    # {
+    #     headers:{},
+    #     qs_params: {},
+    #     body: {}
+    # }
     def get(uri, params={})
       req = @http::Get.new(URI("#{@url}#{uri}"))
       send_request req, params
     end
 
+    #params
+    # {
+    #     headers:{},
+    #     qs_params: {},
+    #     body: {}
+    # }
     def post(uri, params={})
       req = @http::Post.new(URI("#{@url}#{uri}"))
       send_request req, params
     end
 
+    #params
+    # {
+    #     headers:{},
+    #     qs_params: {},
+    #     body: {}
+    # }
     def put(uri, params={})
       req = @http::Put.new(URI("#{@url}#{uri}"))
       send_request req, params
     end
 
+    #params
+    # {
+    #     headers:{},
+    #     qs_params: {},
+    #     body: {}
+    # }
     def patch(uri, params={})
       req = @http::Patch.new(URI("#{@url}#{uri}"))
       send_request req, params
     end
 
+    #params
+    # {
+    #     headers:{},
+    #     qs_params: {},
+    #     body: {}
+    # }
+    def delete(uri, params={})
+      req = @http::Delete.new(URI("#{@url}#{uri}"))
+      send_request req, params
+    end
+
     private
-    # right now I am assuming everything is JSON. Will need to add some checks later if this is not the case for
-    # swagger documented APIs
     def send_request(req, params)
       @headers.each do |key, value|
         req[key] = value

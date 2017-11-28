@@ -27,7 +27,7 @@ module DATSwagger
 
   # get or start the http instance for making calls
   def self.http
-    raise "DATSwagger::Config.host or TrackerAPI::Config.port not yet set" if @config.host.nil? || @config.port.nil?
+    raise "DATSwagger::Config.host or DATSwagger::Config.port not yet set" if @config.host.nil? || @config.port.nil?
     @http ||= DATSwagger::HTTP.new(@config.host, @config.port, @config.headers)
   end
 

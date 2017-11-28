@@ -5,19 +5,20 @@ module DATSwagger
 
   class Config
 
-    attr_reader :get, :post, :patch, :delete, :update, :models
-    attr_accessor :host, :port, :headers, :url
+    attr_reader :get, :post, :patch, :delete, :models, :put
+    attr_accessor :host, :port, :headers, :url, :swagger_file_loaded
 
     def initialize(swagger_file_path='')
       # load the swagger file
       # create the call library based on the swagger file.
       @file_path = swagger_file_path
+      @put = []
       @get = []
       @post = []
       @patch = []
       @delete = []
-      @update = []
       @models = []
+      @swagger_file_loaded = false
       # if the file is passed in on init, load it
       load_swagger_file unless @file_path.empty?
     end
@@ -46,8 +47,8 @@ module DATSwagger
               @patch << {path => _values}
             when 'delete'
               @delete << {path => _values}
-            when 'update'
-              @update << {path => _values}
+            when 'put'
+              @put << {path => _values}
           end
         end
       end
