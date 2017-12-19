@@ -1,6 +1,6 @@
-require_relative 'lib/config'
-require_relative 'lib/http'
-require_relative 'lib/response'
+require_relative 'dat_swagger/config'
+require_relative 'dat_swagger/http'
+require_relative 'dat_swagger/response'
 module DatSwagger
 
   # configure the config object
@@ -121,7 +121,7 @@ module DatSwagger
 
   # get the paths associated with the provided http method
   def self.get_path(http_method, path)
-    @config.send(http_method).each do |_path|
+    config.send(http_method).each do |_path|
       if _path.keys[0] == path
         return _path
       end
