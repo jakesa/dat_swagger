@@ -1,7 +1,7 @@
 require 'pry'
 require 'json'
 require_relative 'model'
-module DATSwagger
+module DatSwagger
 
   class Config
 
@@ -151,10 +151,10 @@ module DATSwagger
 
         end
 
-        DATSwagger::Models.const_set(name.capitalize, model) unless DATSwagger::Models.const_defined?(name.capitalize)
+        DatSwagger::Models.const_set(name.capitalize, model) unless DatSwagger::Models.const_defined?(name.capitalize)
         name = name.capitalize
         @models << name
-        DATSwagger::Models.const_get(name).send(:add_fields, properties)
+        DatSwagger::Models.const_get(name).send(:add_fields, properties)
       end
     end
 

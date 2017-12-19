@@ -1,7 +1,7 @@
 require 'net/http'
 require 'json'
 
-module DATSwagger
+module DatSwagger
 
   class HTTP
 

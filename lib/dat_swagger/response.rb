@@ -1,6 +1,6 @@
 
 
-module DATSwagger
+module DatSwagger
 
   class Response
 
@@ -51,8 +51,8 @@ module DATSwagger
         return nil
       else
         mod = model.split('/').last.capitalize
-        if DATSwagger::Models.const_defined? mod
-          return DATSwagger::Models.const_get mod
+        if DatSwagger::Models.const_defined? mod
+          return DatSwagger::Models.const_get mod
         else
           return nil
         end

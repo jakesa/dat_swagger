@@ -9,7 +9,7 @@ get '/' do
   body JSON.generate({:message => 'success'})
 end
 
-class DATSwagger::Server
+class DatSwagger::Server
 
   def self.build
     @server ||= self.new
@@ -29,7 +29,7 @@ class DATSwagger::Server
 
   def build_server
     [:post, :put, :patch, :get, :delete].each do |m|
-      DATSwagger.config.send(m).each do |path_key, path_props|
+      DatSwagger.config.send(m).each do |path_key, path_props|
         case m
           when :get
             get path_key.to_s do

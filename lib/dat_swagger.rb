@@ -1,7 +1,7 @@
 require_relative 'lib/config'
 require_relative 'lib/http'
 require_relative 'lib/response'
-module DATSwagger
+module DatSwagger
 
   # configure the config object
   # Example:
@@ -10,25 +10,25 @@ module DATSwagger
   #   config.file_path = 'swagger.json'
   # end
   def self.configure
-    @config ||= DATSwagger::Config.new
+    @config ||= DatSwagger::Config.new
     yield(@config) if block_given?
     @config
   end
 
   # get the instance of the config object
   def self.config
-    @config ||= DATSwagger::Config.new
+    @config ||= DatSwagger::Config.new
   end
 
   # resest the config object
   def self.reset_config
-    @config = DATSwagger::Config.new
+    @config = DatSwagger::Config.new
   end
 
   # get or start the http instance for making calls
   def self.http
-    raise "DATSwagger::Config.host or DATSwagger::Config.port not yet set" if @config.host.nil? || @config.port.nil?
-    @http ||= DATSwagger::HTTP.new(@config.host, @config.port, @config.headers)
+    raise "DatSwagger::Config.host or DatSwagger::Config.port not yet set" if @config.host.nil? || @config.port.nil?
+    @http ||= DatSwagger::HTTP.new(@config.host, @config.port, @config.headers)
   end
 
   # make a get call
