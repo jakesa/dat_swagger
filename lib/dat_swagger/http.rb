@@ -1,111 +1,108 @@
 require 'net/http'
+require 'uri'
 require 'json'
 
 module DatSwagger
-
   class HTTP
-
-    def initialize(host, port, headers={})
-      @host = host
-      @port = port
-      @http = Net::HTTP
-      @headers = headers
-      @url = "http://#{host}:#{port}"
+    def initialize(options = {})
+      @host = options[:host]
+      @port = options[:port]
+      @http_class = Net::HTTP
+      @headers = options[:headers] ? options[:headers] : {}
+      @url = options[:url] ? options[:url] : "http://#{@host}:#{@port}"
+      uri = URI.parse(@url)
+      @http = @http_class.new(uri.host, uri.port)
+      if @url.include? 'https'
+        @http.use_ssl = true
+        @http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+      end
     end
 
-    #params
+    # params
     # {
     #     headers:{},
     #     qs_params: {},
     #     body: {}
     # }
-    def get(uri, params={})
-      req = @http::Get.new(URI("#{@url}#{uri}"))
+    def get(uri, params = {})
+      req = @http_class::Get.new(URI("#{@url}#{uri}"))
       send_request req, params
     end
 
-    #params
+    # params
     # {
     #     headers:{},
     #     qs_params: {},
     #     body: {}
     # }
-    def post(uri, params={})
-      req = @http::Post.new(URI("#{@url}#{uri}"))
+    def post(uri, params = {})
+      req = @http_class::Post.new(URI("#{@url}#{uri}"))
       send_request req, params
     end
 
-    #params
+    # params
     # {
     #     headers:{},
     #     qs_params: {},
     #     body: {}
     # }
-    def put(uri, params={})
-      req = @http::Put.new(URI("#{@url}#{uri}"))
+    def put(uri, params = {})
+      req = @http_class::Put.new(URI("#{@url}#{uri}"))
       send_request req, params
     end
 
-    #params
+    # params
     # {
     #     headers:{},
     #     qs_params: {},
     #     body: {}
     # }
-    def patch(uri, params={})
-      req = @http::Patch.new(URI("#{@url}#{uri}"))
+    def patch(uri, params = {})
+      req = @http_class::Patch.new(URI("#{@url}#{uri}"))
       send_request req, params
     end
 
-    #params
+    # params
     # {
     #     headers:{},
     #     qs_params: {},
     #     body: {}
     # }
-    def delete(uri, params={})
-      req = @http::Delete.new(URI("#{@url}#{uri}"))
+    def delete(uri, params = {})
+      req = @http_class::Delete.new(URI("#{@url}#{uri}"))
       send_request req, params
     end
 
     private
-    def send_request(req, params)
-      @headers.each do |key, value|
-        req[key] = value
-      end unless @headers.nil?
 
-      params.each do |key, value|
-        case key
-          when :headers
-            value.each do |name, _value|
-              req[name] = _value
-            end
-          when :qs_params
-            query = ''
-            value.each do |name, _value|
-              if query.empty?
-                query << "#{name}=#{_value}"
-              else
-                query << "&#{name}=#{_value}"
-              end
-            end
-            req.query = query
-          when :body
-            req.body = JSON.generate params[:body]
+    def send_request(req, params)
+      unless @headers.nil?
+        @headers.each do |key, value|
+          req[key] = value
         end
       end
 
-      http = @http.new(@host, @port)
-      response = http.request(req)
-      response
+      params.each do |key, value|
+        case key
+        when :headers
+          value.each do |name, _value|
+            req[name] = _value
+          end
+        when :qs_params
+          req.query =
+            value.map do |name, _value|
+              query.empty? ? "#{name}=#{_value}" : "&#{name}=#{_value}"
+            end.join
+        when :body
+          req.body = JSON.generate params[:body]
+        end
+      end
+      response = @http.request(req)
       {
-          statusCode: response.code,
-          message: response.message,
-          body: (JSON.parse(response.body) unless response.code == '204' || response.body.empty?)
+        statusCode: response.code,
+        message: response.message,
+        body: (JSON.parse(response.body) unless response.code == '204' || response.body.empty?)
       }
     end
-
-
   end
-
 end

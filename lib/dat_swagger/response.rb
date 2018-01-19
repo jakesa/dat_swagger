@@ -1,9 +1,7 @@
 
 
 module DatSwagger
-
   class Response
-
     attr_reader :statusCode, :message, :body, :response, :path
 
     def initialize(response, path)
@@ -11,53 +9,34 @@ module DatSwagger
       @response = response
       @path = path
       model = get_model response[:statusCode], path[path.keys[0]]
-      if model
-        if response[:body].is_a? Array
-          items = []
-          response[:body].each do |item|
-            items << model.new(item)
+      @body =
+        if model
+          if response[:body].is_a?(Array)
+            response[:body].map { |item| model.new(item) }
+          else
+            model.new(response[:body])
           end
-          @body = items
         else
-          @body = model.new(response[:body])
+          response[:body]
         end
-      else
-        @body = response[:body]
-      end
       @message = response[:message]
     end
 
     private
 
     def get_model(code, path)
-      model = nil
       res = path['responses'][code.to_s]
-      if res.nil?
-        return nil
-      else
-        if res['schema'].nil?
-          return nil
-        else
-          if res['schema']['items']
-            model = res['schema']['items']['$ref']
-          elsif res['schema']['$ref']
-            model = res['schema']['$ref']
-          else
-            return nil
-          end
-        end
-      end
-      if model.nil?
-        return nil
-      else
-        mod = model.split('/').last.capitalize
-        if DatSwagger::Models.const_defined? mod
-          return DatSwagger::Models.const_get mod
-        else
-          return nil
-        end
-      end
+      return nil if res.nil?
+      return nil if res['schema'].nil?
+      model = if res['schema']['items']
+                res['schema']['items']['$ref']
+              elsif res['schema']['$ref']
+                res['schema']['$ref']
+              end
+      return nil if model.nil?
+      mod = model.split('/').last.capitalize
+      return DatSwagger::Models.const_get(mod) if DatSwagger::Models.const_defined?(mod)
+      nil
     end
   end
-
 end
