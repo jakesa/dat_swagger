@@ -1,14 +1,12 @@
 require 'pry'
 require 'json'
 require_relative 'model'
-module DATSwagger
-
+module DatSwagger
   class Config
-
     attr_reader :get, :post, :patch, :delete, :models, :put
     attr_accessor :host, :port, :headers, :url, :swagger_file_loaded
 
-    def initialize(swagger_file_path='')
+    def initialize(swagger_file_path = '')
       # load the swagger file
       # create the call library based on the swagger file.
       @file_path = swagger_file_path
@@ -23,42 +21,41 @@ module DATSwagger
       load_swagger_file unless @file_path.empty?
     end
 
+    # This needs to happen after @url @port @host are set.
+    # TODO: The above sentence should be documented
     def file_path=(path)
       @file_path = path
       load_swagger_file
     end
 
-    def file_path
-      @file_path
-    end
+    attr_reader :file_path
 
     def load_swagger_file
       raise 'Config.file_path needs to be set to the location of your swagger.json file' if @file_path.empty?
-      @file ||= File.read(File.expand_path("#{@file_path}"))
+      @file ||= File.read(File.expand_path(@file_path.to_s))
       data = JSON.parse(@file)
-      data["paths"].each do |path, values|
-        values.each do |_method, _values |
+      data['paths'].each do |path, values|
+        values.each do |_method, _values|
           case _method
-            when 'get'
-              @get << {path => _values}
-            when 'post'
-              @post << {path => _values}
-            when 'patch'
-              @patch << {path => _values}
-            when 'delete'
-              @delete << {path => _values}
-            when 'put'
-              @put << {path => _values}
+          when 'get'
+            @get << { path => _values }
+          when 'post'
+            @post << { path => _values }
+          when 'patch'
+            @patch << { path => _values }
+          when 'delete'
+            @delete << { path => _values }
+          when 'put'
+            @put << { path => _values }
           end
         end
       end
 
       build_models data['definitions']
-
       _host = data['host'].split(':')
-      @host = _host[0] unless @host != nil
-      @port = _host[1] unless @port != nil
-      @url = "http://#{host}:#{port}" unless @url != nil
+      @host = _host[0] if @host.nil?
+      @port = _host[1] if @port.nil?
+      @url = "http://#{host}:#{port}" if @url.nil?
     end
 
     def build_models(definitions)
@@ -67,36 +64,33 @@ module DATSwagger
       definitions.each do |name, properties|
         # TODO: This class needs a little work for providing useful methods for data
         model = Class.new(Object) do
-
           def self.add_fields(*args)
             @fields ||= []
             @required_fields ||= []
             @field_definitions ||= {}
-            args[0]['properties'].each do |name, props|
-              attr_accessor name
-              @fields << name
-              @field_definitions[name] = props
-            end unless args[0].nil? || args[0]['properties'].nil?
-            args[0]['required'].each do |arg|
-              @required_fields << arg
-            end unless args[0].nil? || args[0]['required'].nil?
+            unless args[0].nil? || args[0]['properties'].nil?
+              args[0]['properties'].each do |name, props|
+                attr_accessor name
+                @fields << name
+                @field_definitions[name] = props
+              end
+            end
+            unless args[0].nil? || args[0]['required'].nil?
+              args[0]['required'].each do |arg|
+                @required_fields << arg
+              end
+            end
           end
 
-          def self.fields
-            @fields
+          class << self
+            attr_reader :fields
+            attr_reader :required_fields
+            attr_reader :field_definitions
           end
 
-          def self.required_fields
-            @required_fields
-          end
-
-          def self.field_definitions
-            @field_definitions
-          end
-
-          def initialize(data_hash={})
+          def initialize(data_hash = {})
             data_hash.each do |field, value|
-              send("#{field.to_s}=", value) if self.respond_to? "#{field.to_s}="
+              send("#{field}=", value) if respond_to? "#{field}="
             end
           end
 
@@ -126,19 +120,20 @@ module DATSwagger
             @field_definitions ||= self.class.field_definitions
           end
 
-          private
-          def list_hash(hash, index=0)
+                  private
+
+          def list_hash(hash, index = 0)
             hash.each_key do |key|
-              key_space = index > 0 ? ' '*index : ''
+              key_space = index > 0 ? ' ' * index : ''
               value_space = key_space + '  '
               puts "#{key_space}#{key}:"
               value = hash[key]
               if value.is_a? Hash
-                list_hash value, index +=1
+                list_hash value, index += 1
               elsif value.is_a? Array
                 value.each do |value|
                   if value.is_a? Hash
-                    list_hash value, index +=1
+                    list_hash value, index += 1
                   else
                     puts "#{value_space}#{value}"
                   end
@@ -148,29 +143,26 @@ module DATSwagger
               end
             end
           end
-
         end
-
-        DATSwagger::Models.const_set(name.capitalize, model) unless DATSwagger::Models.const_defined?(name.capitalize)
+        DatSwagger::Models.const_set(name.capitalize, model) unless DatSwagger::Models.const_defined?(name.capitalize)
         name = name.capitalize
         @models << name
-        DATSwagger::Models.const_get(name).send(:add_fields, properties)
+        DatSwagger::Models.const_get(name).send(:add_fields, properties)
       end
     end
 
-
-    def method_missing(name, *args, &block)
+    def method_missing(name, *args)
       value = args[0]
-      if name.match(/^.*=/) != nil
-        unless respond_to?(name) || respond_to?("#{name.to_s.gsub('=','')}".to_sym)
-          define_singleton_method(name) {|val|instance_variable_set("@#{name.to_s.gsub('=','')}", val)}
-          define_singleton_method("#{name.to_s.gsub('=','')}") {instance_variable_get("@#{name.to_s.gsub('=','')}")}
-          self.send(name, value)
-        end
-      else
-        nil
+      return nil unless /^.*=/.match?(name)
+      return nil unless respond_to?(name) || respond_to?(name.to_s.delete('='))
+      name = name.to_s.delete('=')
+      define_singleton_method(name + '=') do |val|
+        instance_variable_set("@#{name}", val)
       end
+      define_singleton_method(name) do
+        instance_variable_get("@#{name}")
+      end
+      send(name + '=', value)
     end
   end
-
 end
