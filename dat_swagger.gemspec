@@ -31,5 +31,6 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "rake", "~> 10.0"
   spec.add_development_dependency 'sinatra', '~> 2.0'
   spec.add_development_dependency 'rspec', '~> 0.1'
+  spec.add_development_dependency 'rspec-core', '~> 3.7.1'
   spec.add_development_dependency 'pry'
 end
