@@ -4,6 +4,7 @@ require_relative '../lib/dat_swagger/http'
 require_relative '../lib/dat_swagger/model'
 require_relative '../lib/dat_swagger/response'
 require_relative '../lib/dat_swagger/server'
+require_relative 'stub_server'
 
 require 'pry'
 

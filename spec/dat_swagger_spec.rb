@@ -55,6 +55,40 @@ describe DATSwagger do
       expect(@swag.respond_to? :get).to be true
     end
 
+    context('Can make calls without a swagger file') do
+
+      before :all do
+        @server = Server.new
+        @server.start
+        @swag.config.url = 'http://localhost:4567'
+      end
+
+      after :all do
+        @server.stop
+
+      end
+
+      it 'should make a get call' do
+        expect(@swag.get('/')[:statusCode]).to eq '200'
+      end
+
+      it 'should make a post call' do
+        expect(@swag.post('/', {body: {}})[:statusCode]).to eq '200'
+      end
+
+      it 'should make a patch call' do
+        expect(@swag.patch('/', {body: {}})[:statusCode]).to eq '200'
+      end
+
+      it 'should make a put call' do
+        expect(@swag.put('/', {body:{}})[:statusCode]).to eq '200'
+      end
+
+      it 'should make a delete call' do
+        expect(@swag.delete('/1')[:statusCode]).to eq '200'
+      end
+    end
+
   end
 
   context('class') do
@@ -96,15 +130,55 @@ describe DATSwagger do
       expect(DATSwagger.respond_to? :get).to be true
     end
 
+    context('Can make calls without a swagger file') do
 
-  end
+      before :all do
 
-  context('Make requests from resources defined in a swagger file') do
+        @server = Server.new
+        @server.start
+        DATSwagger.configure do | config |
+          config.url = 'http://localhost:4567'
+        end
+      end
 
-    before(:all) do
-      @swag = DATSwagger.new('./spec/resultsAPI-swagger.json')
+      after :all do
+        @server.stop
+        DATSwagger.reset_config
+      end
+
+      it 'should make a get call' do
+        expect(DATSwagger.get('/')[:statusCode]).to eq '200'
+      end
+
+      it 'should make a post call' do
+        expect(DATSwagger.post('/', {body: {}})[:statusCode]).to eq '200'
+      end
+
+      it 'should make a patch call' do
+        expect(DATSwagger.patch('/', {body: {}})[:statusCode]).to eq '200'
+      end
+
+      it 'should make a put call' do
+        expect(DATSwagger.put('/', {body:{}})[:statusCode]).to eq '200'
+      end
+
+      it 'should make a delete call' do
+        expect(DATSwagger.delete('/1')[:statusCode]).to eq '200'
+      end
     end
 
+
   end
+
+
+
+
+  # context('Make requests from resources defined in a swagger file') do
+  #
+  #   before(:all) do
+  #     @swag = DATSwagger.new('./spec/resultsAPI-swagger.json')
+  #   end
+  #
+  # end
 
 end

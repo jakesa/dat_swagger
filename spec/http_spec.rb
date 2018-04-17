@@ -1,5 +1,4 @@
 require_relative 'spec_helper'
-require_relative 'stub_server'
 require 'pry'
 describe DATSwagger::HTTP do
 

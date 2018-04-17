@@ -4,7 +4,7 @@ require_relative 'model'
 class DATSwagger
   class Config
     attr_reader :get, :post, :patch, :delete, :models, :put
-    attr_accessor :host, :port, :headers, :url, :swagger_file_loaded
+    attr_accessor :host, :port, :headers, :url
 
     def initialize(swagger_file_path = '')
       # load the swagger file
@@ -56,6 +56,11 @@ class DATSwagger
       @host = _host[0] if @host.nil?
       @port = _host[1] if @port.nil?
       @url = "http://#{host}:#{port}" if @url.nil?
+      @swagger_file_loaded = true
+    end
+
+    def swagger_file_loaded?
+      @swagger_file_loaded
     end
 
     def build_models(definitions)

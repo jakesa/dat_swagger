@@ -21,6 +21,10 @@ class DATSwagger
       @config ||= DATSwagger::Config.new
     end
 
+    def config?
+      !@config.nil?
+    end
+
     # reset the config object
     def reset_config
       @config = DATSwagger::Config.new
@@ -131,35 +135,43 @@ class DATSwagger
 
     # process and make the http call
     def process_call(http_method, resource, params = {})
-      if resource == 'options'
-        puts 'Here are the available options'
-        list_paths(@config.send(http_method))
-        return nil
-      end
-      path = get_path(http_method.to_sym, resource)
-      if path.nil?
-        raise "#{resource} is not a valid get resource. Call #get to see a list of available paths"
-      end
-      if resource.include?('{')
-        resource_params = resource.scan(/{\w+}/)
-        resource_params.each do |param|
-          _param = param.delete('{')
-          _param.delete!('}')
-          if params[_param.to_sym]
-            resource.gsub!(param, params[_param.to_sym])
-          elsif params[_param]
-            resource.gsub!(param, params[_param])
-          else
-            raise "#{resource} includes resource parameters but none were passed in."
+      if config.swagger_file_loaded?
+        if resource == 'options'
+          puts 'Here are the available options'
+          list_paths(@config.send(http_method))
+          return nil
+        end
+        path = get_path(http_method.to_sym, resource)
+        if path.nil?
+          raise "#{resource} is not a valid get resource. Call #get to see a list of available paths"
+        end
+        if resource.include?('{')
+          resource_params = resource.scan(/{\w+}/)
+          resource_params.each do |param|
+            _param = param.delete('{')
+            _param.delete!('}')
+            if params[_param.to_sym]
+              resource.gsub!(param, params[_param.to_sym])
+            elsif params[_param]
+              resource.gsub!(param, params[_param])
+            else
+              raise "#{resource} includes resource parameters but none were passed in."
+            end
           end
         end
-      end
-      if params.is_a?(String) && params.casecmp('help').zero?
-        list_hash(path)
-        true
+        if params.is_a?(String) && params.casecmp('help').zero?
+          list_hash(path)
+          true
+        else
+          # make the call
+          Response.new http.send(http_method, resource, params), path
+        end
       else
-        # make the call
-        Response.new http.send(http_method, resource, params), path
+        if resource == 'options'
+          puts 'No swagger file was loaded. No defined routes'
+          return nil
+        end
+        http.send(http_method, resource, params)
       end
     end
   end
