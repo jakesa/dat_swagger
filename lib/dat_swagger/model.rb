@@ -1,1 +1,4 @@
-module DatSwagger module Models end end
+class DATSwagger
+  module Models
+  end
+end

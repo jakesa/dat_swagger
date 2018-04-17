@@ -1,7 +1,7 @@
 require 'pry'
 require 'json'
 require_relative 'model'
-module DatSwagger
+class DATSwagger
   class Config
     attr_reader :get, :post, :patch, :delete, :models, :put
     attr_accessor :host, :port, :headers, :url, :swagger_file_loaded
@@ -144,17 +144,18 @@ module DatSwagger
             end
           end
         end
-        DatSwagger::Models.const_set(name.capitalize, model) unless DatSwagger::Models.const_defined?(name.capitalize)
-        name = name.capitalize
+        # make sure that the first letter in the class name is caps without changing the other letters
+        name = name.slice(0,1).capitalize + name.slice(1..-1)
+        DATSwagger::Models.const_set(name, model) unless DATSwagger::Models.const_defined?(name)
         @models << name
-        DatSwagger::Models.const_get(name).send(:add_fields, properties)
+        DATSwagger::Models.const_get(name).send(:add_fields, properties)
       end
     end
 
     def method_missing(name, *args)
       value = args[0]
       return nil unless /^.*=/.match?(name)
-      return nil unless respond_to?(name) || respond_to?(name.to_s.delete('='))
+      return nil if (respond_to?(name) || respond_to?(name.to_s.delete('=')))
       name = name.to_s.delete('=')
       define_singleton_method(name + '=') do |val|
         instance_variable_set("@#{name}", val)
@@ -162,7 +163,7 @@ module DatSwagger
       define_singleton_method(name) do
         instance_variable_get("@#{name}")
       end
-      send(name + '=', value)
+      self.send(name + '=', value)
     end
   end
 end

@@ -1,34 +1,43 @@
-require_relative 'dat_swagger/config_object'
+require_relative 'dat_swagger/config'
 require_relative 'dat_swagger/http'
 require_relative 'dat_swagger/response'
-module DatSwagger
+require_relative 'dat_swagger/dat_swagger'
+class DATSwagger
+
+  def initialize(swagger_file_path = nil)
+    unless swagger_file_path.nil?
+      @config = DATSwagger::Config.new(swagger_file_path)
+      @config.load_swagger_file
+    end
+
+  end
+
   # configure the config object
   # Example:
   #
   # TrackerAPI.configure do |config|
   #   config.file_path = 'swagger.json'
   # end
-  def self.configure
-    @config ||= DatSwagger::Config.new
+  def configure
+    @config ||= DATSwagger::Config.new
     yield(@config) if block_given?
     @config
   end
 
   # get the instance of the config object
-  def self.config
-    @config ||= DatSwagger::Config.new
+  def config
+    @config ||= DATSwagger::Config.new
   end
 
   # reset the config object
-  def self.reset_config
-    @config = DatSwagger::Config.new
+  def reset_config
+    @config = DATSwagger::Config.new
   end
 
   # get or start the http instance for making calls
-  def self.http
+  def http
     options = %i[url host port headers]
-    @http ||= DatSwagger::HTTP.new \
-      options.zip(options.map { |e| @config.send(e) }).to_h
+    @http ||= DATSwagger::HTTP.new options.zip(options.map { |e| @config.send(e) }).to_h
   end
 
   # make a get call
@@ -38,7 +47,7 @@ module DatSwagger
   #     qs_params: {},
   #     body: {}
   # }
-  def self.get(resource = 'options', params = {})
+  def get(resource = 'options', params = {})
     process_call(:get, resource, params)
   end
 
@@ -49,7 +58,7 @@ module DatSwagger
   #     qs_params: {},
   #     body: {}
   # }
-  def self.post(resource = 'options', params = {})
+  def post(resource = 'options', params = {})
     process_call(:post, resource, params)
   end
 
@@ -60,7 +69,7 @@ module DatSwagger
   #     qs_params: {},
   #     body: {}
   # }
-  def self.patch(resource = 'options', params = {})
+  def patch(resource = 'options', params = {})
     process_call(:patch, resource, params)
   end
 
@@ -71,7 +80,7 @@ module DatSwagger
   #     qs_params: {},
   #     body: {}
   # }
-  def self.put(resource = 'options', params = {})
+  def put(resource = 'options', params = {})
     process_call(:put, resource, params)
   end
 
@@ -82,14 +91,14 @@ module DatSwagger
   #     qs_params: {},
   #     body: {}
   # }
-  def self.delete(resource = 'options', params = {})
+  def delete(resource = 'options', params = {})
     process_call(:delete, resource, params)
   end
 
   private
 
   # list out all the available paths
-  def self.list_paths(paths)
+  def list_paths(paths)
     paths.each do |path|
       path.each do |name, _opts|
         puts name
@@ -98,7 +107,7 @@ module DatSwagger
   end
 
   # pretty output for the contents of a hash
-  def self.list_hash(hash, index = 0)
+  def list_hash(hash, index = 0)
     hash.each_key do |key|
       key_space = index > 0 ? ' ' * index : ''
       value_space = key_space + '  '
@@ -121,7 +130,7 @@ module DatSwagger
   end
 
   # get the paths associated with the provided http method
-  def self.get_path(http_method, path)
+  def get_path(http_method, path)
     config.send(http_method).each do |_path|
       return _path if _path.keys[0] == path
     end
@@ -129,7 +138,7 @@ module DatSwagger
   end
 
   # process and make the http call
-  def self.process_call(http_method, resource, params = {})
+  def process_call(http_method, resource, params = {})
     if resource == 'options'
       puts 'Here are the available options'
       list_paths(@config.send(http_method))
@@ -137,8 +146,7 @@ module DatSwagger
     end
     path = get_path(http_method.to_sym, resource)
     if path.nil?
-      raise "#{resource} is not a valid get resource. Call #get to see a "\
-        'list of available paths'
+      raise "#{resource} is not a valid get resource. Call #get to see a list of available paths"
     end
     if resource.include?('{')
       resource_params = resource.scan(/{\w+}/)
@@ -150,8 +158,7 @@ module DatSwagger
         elsif params[_param]
           resource.gsub!(param, params[_param])
         else
-          raise "#{resource} includes resource parameters but none were passed"\
-            ' in.'
+          raise "#{resource} includes resource parameters but none were passed in."
         end
       end
     end
@@ -163,4 +170,5 @@ module DatSwagger
       Response.new http.send(http_method, resource, params), path
     end
   end
+
 end

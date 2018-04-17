@@ -1,6 +1,6 @@
 
 
-module DatSwagger
+class DATSwagger
   class Response
     attr_reader :statusCode, :message, :body, :response, :path
 
@@ -35,7 +35,7 @@ module DatSwagger
               end
       return nil if model.nil?
       mod = model.split('/').last.capitalize
-      return DatSwagger::Models.const_get(mod) if DatSwagger::Models.const_defined?(mod)
+      return DATSwagger::Models.const_get(mod) if DATSwagger::Models.const_defined?(mod)
       nil
     end
   end

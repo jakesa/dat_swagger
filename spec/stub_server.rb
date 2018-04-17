@@ -1,18 +1,48 @@
-# require 'sinatra'
-# require 'json'
+require 'sinatra'
+require 'json'
 
-# get '/' do
-#   status '200'
-#   headers \
-#     'Content-type'=> 'application/json'
-#   body JSON.generate({:message => 'success'})
-# end
+before do
+  # if request.body
+    request.body.rewind
+    @request_payload = request.body.read
+  # end
+end
+
+get '/' do
+  puts params
+  status '200'
+  headers 'Content-type'=> 'application/json'
+  body JSON.generate({:message => 'success', params: params})
+end
+
+post '/' do
+  status '200'
+  headers 'Content-type'=> 'application/json'
+  body JSON.generate({:message => 'success', payload: JSON.parse(@request_payload)})
+end
+
+put '/' do
+  status '200'
+  headers 'Content-type'=> 'application/json'
+  body JSON.generate({:message => 'success', payload: JSON.parse(@request_payload)})
+end
+
+patch '/' do
+  status '200'
+  headers 'Content-type'=> 'application/json'
+  body JSON.generate({:message => 'success', payload: JSON.parse(@request_payload)})
+end
+
+delete '/:id' do |id|
+  status '200'
+  headers 'Content-type'=> 'application/json'
+  body JSON.generate({:message => 'success', id: id})
+end
 
 class Server
 
   attr_accessor :server_wait_time
-  # TODO: think about how I want this to work with a remote server
-  def initialize(report=true, server_wait_time=3, server_path)
+  def initialize(server_path = nil, report=false, server_wait_time=3)
     @server_wait_time = server_wait_time
     @server_process = nil
     @reporting = report
@@ -38,7 +68,13 @@ class Server
       puts 'Server already running'
       false
     else
-      path = File.expand_path("#{@server_path}")
+      path = ''
+      if @server_path
+        path = File.expand_path("#{@server_path}")
+      else
+        path = File.dirname(__FILE__) + '/stub_server.rb'
+      end
+
       @server_process = Object::IO.popen "ruby #{path}"
       sleep @server_wait_time
       start_reporting
