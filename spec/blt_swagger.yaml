@@ -1,0 +1,626 @@
+swagger: '2.0'
+info:
+  description: >-
+    This group of web services supports the management of bookable loads posted
+    by brokers or shippers who have integrated their TMS with DAT Solutions.
+    This includes posting loads that are only visible to and bookable by a
+    defined and explicit set of carriers. Additionally, consumers of these
+    services can indicate when a bookable load has been claimed by a carrier, or
+    when the rate has been finalized, etc.
+  version: 0.0.3
+  title: Bookable Loads for Truckers
+  contact:
+    name: ''
+    email: ''
+host: api.test.dat.com
+basePath: /blt
+schemes:
+  - https
+security:
+  - API-Authorizer: []
+paths:
+  /bookable-loads:
+    get:
+      summary: Get a list bookable loads by carrier email
+      description: >-
+        Retrieves a list of bookable loads that the carrier is authorized to see
+        using the provided **email** contained in the path parameter list.
+      produces:
+        - application/json
+      parameters:
+        - name: email
+          in: query
+          required: false
+          type: string
+          description: >-
+            Base64Encoded representation of an email address to filter loads by.
+            This should be included when the consumer is a carrier or is
+            requesting on behalf of a carrier.
+          x-example: am9obi5kb2VAZmFrZS1kYXQtZW1haWwuY29t
+      responses:
+        '200':
+          description: Status 200
+          schema:
+            type: object
+            properties:
+              data:
+                type: object
+                properties:
+                  listResults:
+                    type: array
+                    items:
+                      $ref: '#/definitions/Load'
+                  totalRecordCount:
+                    type: number
+    post:
+      summary: Create a bookable load
+      description: >-
+        Note: If the load is meant to be seen by the *booking.bookableBy*
+        audience, then *isBookable* must be set to **true**
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/Load'
+      responses:
+        '200':
+          description: 200 response
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: '#/definitions/Load'
+        '400':
+          description: Status 400
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+  '/bookable-loads/{id}':
+    get:
+      summary: Get a bookable load by loadId
+      description: >-
+        Retrieves a bookable load using the provided **loadId** contained in the
+        path parameter list. 
+      produces:
+        - application/json
+      parameters: []
+      responses:
+        '200':
+          description: 200 response
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: '#/definitions/Load'
+        '404':
+          description: Status 404
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+    put:
+      summary: Update a bookable load
+      description: >-
+        Updates a bookable load by performing a full record replacement based on
+        what's provided in the request body.
+      consumes: []
+      produces:
+        - application/json
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/Load'
+      responses:
+        '200':
+          description: Status 200
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: '#/definitions/Load'
+        '404':
+          description: Status 404
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+    parameters:
+      - name: id
+        in: path
+        required: true
+        type: string
+        description: The load identifier (loadId)
+        x-example: b94b8db4-d725-4fe9-a87d-26245284c8ca
+  '/bookable-loads/{id}/booking':
+    patch:
+      summary: Update a booking
+      description: |-
+        Updates one or more of the following fields in a booking:
+        * bookableBy list
+        * bookedBy
+        * bookRate
+        * bookingStatus
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/Booking'
+      responses:
+        '200':
+          description: Status 200
+          schema:
+            type: object
+            description: >-
+              Updates only the fields included in the request for a load
+              booking.
+            properties:
+              data:
+                $ref: '#/definitions/Booking'
+        '403':
+          description: >-
+            Occurs when the requester is not authorized to book the load
+            (indicated by the "bookedBy" field)
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '404':
+          description: The load could not be found or is unavailable
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+    parameters:
+      - name: id
+        in: path
+        required: true
+        type: string
+        description: The load identifier (loadId)
+        x-example: b94b8db4-d725-4fe9-a87d-26245284c8ca
+securityDefinitions:
+  API-Authorizer:
+    type: apiKey
+    name: Authorization
+    in: header
+definitions:
+  Load:
+    type: object
+    required:
+      - booking
+      - deliveryWindow
+      - dimensions
+      - isBookable
+      - pickupWindow
+      - posting
+      - requirements
+      - status
+      - waypoints
+    properties:
+      loadId:
+        type: string
+        description: Unique load ID generated by DAT service
+        example: b94b8db4-d725-4fe9-a87d-26245284c8ca
+      posting:
+        $ref: '#/definitions/LoadPosting'
+      status:
+        type: string
+        description: Status of the load
+        default: AWAITING PICK UP
+        enum:
+          - AWAITING PICK UP
+          - PICKED UP
+          - IN ROUTE
+          - DELIVERED
+      isBookable:
+        type: boolean
+        description: >-
+          Indicates whether the load can be booked in the application
+          (isBookable=true).  All bookable loads must have this value set to
+          true.
+        default: true
+      pickupWindow:
+        $ref: '#/definitions/SchedulingWindow'
+      deliveryWindow:
+        $ref: '#/definitions/SchedulingWindow'
+      waypoints:
+        type: array
+        description: >-
+          Origin and destination of the load. Must provide at least a postal
+          code for each.
+        items:
+          $ref: '#/definitions/Waypoint'
+      dimensions:
+        $ref: '#/definitions/LoadDimensions'
+      requirements:
+        $ref: '#/definitions/LoadRequirements'
+      booking:
+        $ref: '#/definitions/Booking'
+      isPartialLoad:
+        type: boolean
+        description: Indicates whether load is full or partial
+        default: false
+      commodity:
+        type: string
+        description: The type of item being shipped
+        maxLength: 70
+        example: CHEMICAL LABORATORY EQUIPMENT AND SUPPLIES
+      note:
+        type: string
+        description: Poster-supplied note about this shipment
+        maxLength: 280
+        example: Ask for Jim at the dock
+      referenceId:
+        type: string
+        description: Poster-supplied identifier for this shipment
+        maxLength: 8
+        example: ABCD1234
+    description: Cargo to be transported
+  LoadPosting:
+    type: object
+    required:
+      - isPrivateAudience
+      - offerRate
+      - poster
+      - status
+    properties:
+      postingId:
+        type: string
+        description: Unique posting ID generated by DAT services
+      isPrivateAudience:
+        type: boolean
+        description: >-
+          Indicates whether this load posting is available to the general public
+          or only to a private audience selected by the poster.  At this time,
+          all bookable load postings must have this value set to true.
+        default: true
+      status:
+        type: string
+        description: Status of the load posting
+        default: POSTED
+        enum:
+          - POSTED
+          - CANCELED
+          - EXPIRED
+      offerRate:
+        type: integer
+        description: >-
+          Rate in American dollars that the poster is offering to pay for
+          carrying this load
+        maximum: 99999
+      poster:
+        $ref: '#/definitions/Poster'
+      startDate:
+        type: string
+        format: date-time
+        description: >-
+          Date and time to send the notifications to the selected carriers and
+          to start displaying the load posting to them in the application.
+          Defaults to current day and time. Uses the date-time notation defined
+          by RFC 3339, section 5.6.
+        example: '2018-09-12T15:30:00.000Z'
+      endDate:
+        type: string
+        format: date-time
+        description: >-
+          Date and time to stop displaying the load posting. Defaults to end of
+          current day. Uses the date-time notation defined by RFC 3339, section
+          5.6.
+        example: '2018-09-12T23:59:00.000Z'
+      postingName:
+        type: string
+        description: Poster-supplied name for the load posting
+        maxLength: 50
+        example: Load of tires from Atlanta to Chicago
+    description: Posting of cargo that needs to be transported
+  Poster:
+    type: object
+    required:
+      - contact
+    properties:
+      contact:
+        $ref: '#/definitions/Contact'
+      tmsUserId:
+        type: string
+        description: >-
+          TMS-provided identifier for the user who is posting. This may or may
+          not be the same as the contact person.
+        maxLength: 50
+    description: The organization posting the load. Can be a broker or shipper.
+  Contact:
+    type: object
+    required:
+      - email
+      - name
+      - phone
+    properties:
+      name:
+        type: string
+        description: First and last name
+        maxLength: 50
+        example: Pat Smith
+      email:
+        type: string
+        description: Email address for contacting this person
+        maxLength: 254
+        pattern: >-
+          ^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$
+        example: carrier@carriercompany.com
+      phone:
+        type: string
+        description: 10-digit phone number for contacting this person
+        pattern: >-
+          ^\s*(?:\+?(\d{1,3}))?[-. (]*(\d{3})[-. )]*(\d{3})[-. ]*(\d{4})(?:(?:
+          *x| *ext)(\d+))?\s*$
+        example: +1 (503) 555-1212
+      fax:
+        type: string
+        description: 'https://en.wikipedia.org/wiki/Fax'
+        pattern: >-
+          ^\s*(?:\+?(\d{1,3}))?[-. (]*(\d{3})[-. )]*(\d{3})[-. ]*(\d{4})(?:(?:
+          *x| *ext)(\d+))?\s*$
+        example: +1 (503) 555-1212
+    description: >-
+      Contact person at the posting organization. This person's contact
+      information will be shared with the carrier who books the load.
+  SchedulingWindow:
+    type: object
+    required:
+      - close
+      - open
+    properties:
+      open:
+        type: string
+        format: date-time
+        description: >-
+          Start date and time of the appointment window. Uses the date-time
+          notation defined by RFC 3339, section 5.6.
+        example: '2018-09-12T15:30:00.000Z'
+      close:
+        type: string
+        format: date-time
+        description: >-
+          End date and time of the appointment window. Uses the date-time
+          notation defined by RFC 3339, section 5.6.
+        example: '2018-09-12T17:00:00.000Z'
+    description: Window of time for pick-up or delivery
+  Waypoint:
+    type: object
+    required:
+      - address
+      - sequenceNumber
+    properties:
+      sequenceNumber:
+        type: number
+        description: >-
+          Sequence number of this waypoint in all waypoints for a single trip.
+          At this time, DAT supports only a single origin (sequence number 1)
+          and a single destination (sequence number 2).
+        minimum: 1
+        maximum: 2
+      address:
+        $ref: '#/definitions/Address'
+      name:
+        type: string
+        description: A descriptive name for the waypoint
+        maxLength: 50
+        example: Sam's warehouse
+    description: >-
+      Stops in a trip. At this time, DAT supports only two waypoints, an origin
+      and a destination.
+  Address:
+    type: object
+    required:
+      - postalCode
+    properties:
+      postalCode:
+        type: string
+        description: Postal code
+        minLength: 5
+        maxLength: 10
+        pattern: >-
+          (^\d{5}(-\d{4})?$)|(^[ABCEGHJKLMNPRSTVXYabceghjklmnprstvxy]{1}\d{1}[A-Za-z]{1}[
+          ]{1}\d{1}[A-Za-z]{1}\d{1}$)
+        example: |-
+          97008
+          K1A 0B1
+      street1:
+        type: string
+        description: Line 1 of a street address
+        maxLength: 200
+        example: 1234 Main Street
+      street2:
+        type: string
+        description: Line 2 of a street address
+        maxLength: 200
+        example: 'Warehouse #5'
+      city:
+        type: string
+        description: Name of a city
+        maxLength: 50
+        example: Winchester-on-the-Severn
+      stateProv:
+        type: string
+        description: Two to four letter abbreviation of a state or province
+        maxLength: 4
+        example: OR
+      country:
+        type: string
+        description: 2-letter abbreviation for a country
+        default: US
+        enum:
+          - US
+          - CA
+          - MX
+        minLength: 2
+        maxLength: 2
+    description: Physical address of waypoint
+  LoadDimensions:
+    type: object
+    required:
+      - length
+      - weight
+    properties:
+      length:
+        type: integer
+        description: Length of the load in feet
+        minimum: 1
+        maximum: 99
+      weight:
+        type: integer
+        description: Weight of the load in pounds
+        minimum: 1
+        maximum: 999999
+    description: Dimensions of the load
+  LoadRequirements:
+    type: object
+    required:
+      - equipmentTypeCode
+    properties:
+      equipmentTypeCode:
+        type: string
+        description: >-
+          1 or 2-digit code representing the type of equipment needed for this
+          load. (Current implementation of equipment requirements.)
+        enum:
+          - AC
+          - BT
+          - C
+          - CI
+          - CN
+          - CR
+          - CV
+          - DD
+          - DT
+          - F
+          - F2
+          - FA
+          - FC
+          - FD
+          - FH
+          - FM
+          - FN
+          - FO
+          - FR
+          - FS
+          - FT
+          - FV
+          - FZ
+          - HB
+          - IR
+          - LA
+          - LB
+          - LO
+          - LR
+          - MV
+          - MX
+          - NU
+          - OT
+          - PO
+          - R
+          - R2
+          - RA
+          - RG
+          - RL
+          - RM
+          - RN
+          - RP
+          - RV
+          - RZ
+          - SB
+          - SD
+          - SN
+          - SR
+          - ST
+          - TA
+          - TN
+          - TS
+          - TT
+          - V
+          - V2
+          - V3
+          - VA
+          - VB
+          - VC
+          - VF
+          - VG
+          - VH
+          - VI
+          - VL
+          - VM
+          - VN
+          - VP
+          - VR
+          - VS
+          - VT
+          - VV
+          - VW
+          - VZ
+        minLength: 1
+        maxLength: 2
+    description: Equipment requirements of the load
+  Booking:
+    type: object
+    required:
+      - bookableBy
+      - bookingStatus
+    properties:
+      bookingStatus:
+        type: string
+        description: >-
+          Status of the booking. Defaults to AVAILABLE. Once a carrier books the
+          load in the application, the status will automatically update to
+          BOOKED; the load posting will then appear as unavailable to all other
+          carriers who received it (all other carriers in the bookableBy field).
+          If that booking falls through and the load is updated back to the
+          AVAILABLE status, the load posting will appear as available again to
+          all carriers who received it (all carriers in the bookableBy field).
+        default: AVAILABLE
+        enum:
+          - AVAILABLE
+          - BOOKED
+      bookableBy:
+        type: array
+        description: >-
+          List of unique email addresses that will receive an invitation to book
+          this load. Each bookable load must contain at least one and no more
+          than 1,000 valid email addresses in this field.
+        items:
+          type: string
+          maxLength: 254
+          pattern: >-
+            ^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$
+          example: carrier@carriercompany.com
+        minItems: 1
+        maxItems: 1000
+      bookRate:
+        type: number
+        description: >-
+          Rate in American dollars that the poster and carrier have agreed on
+          for delivery of the load. Defaults to the value of offerRate but DAT
+          suggests that this be updated if the rate is different in the rate
+          confirmation.
+      bookedBy:
+        type: string
+        description: >-
+          Email address of the carrier who booked the load. There can be only
+          one email address in this field.
+        maxLength: 254
+        pattern: >-
+          ^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$
+        example: carrier@carriercompany.com
+    description: >-
+      Details about who can or has booked a load, the rate to transport the
+      load, and the status of the booking
+  ErrorResponse:
+    type: object
+    properties:
+      data:
+        type: object
+        properties:
+          error:
+            type: string
+            description: A message describing the nature of the error.
+    description: The expected format for any API service errors

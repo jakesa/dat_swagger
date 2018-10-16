@@ -1,11 +1,11 @@
 # coding: utf-8
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'dat_swagger/version'
+require_relative './lib/dat_swagger/version'
 
 Gem::Specification.new do |spec|
   spec.name          = 'dat_swagger'
-  spec.version       = DatSwagger::VERSION
+  spec.version       = DAT::Version
   spec.authors       = ['Jake Sarate']
   spec.email         = ['jake.sarate@dat.com']
 

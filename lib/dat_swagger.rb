@@ -1,184 +1,113 @@
-require_relative 'dat_swagger/config'
-require_relative 'dat_swagger/http'
-require_relative 'dat_swagger/response'
-require_relative 'dat_swagger/dat_swagger'
-class DATSwagger
+require_relative '../lib/dat_swagger/parser/json'
+require_relative '../lib/dat_swagger/parser/yaml'
+require_relative 'dat_swagger/config/config'
 
-  def initialize(swagger_file_path = nil)
-    unless swagger_file_path.nil?
-      @config = DATSwagger::Config.new(swagger_file_path)
-      @config.load_swagger_file
-    end
+module DAT::Swagger
+  class Client
 
-    # @config = DATSwagger.config if DATSwagger.config?
+    class << self
 
-  end
-
-  # configure the config object
-  # Example:
-  #
-  # TrackerAPI.configure do |config|
-  #   config.file_path = 'swagger.json'
-  # end
-  def configure
-    @config ||= DATSwagger::Config.new
-    yield(@config) if block_given?
-    @config
-  end
-
-  # get the instance of the config object
-  def config
-    @config ||= DATSwagger::Config.new
-  end
-
-  # reset the config object
-  def reset_config
-    @config = DATSwagger::Config.new
-  end
-
-  # get or start the http instance for making calls
-  def http
-    options = %i[url host port headers]
-    @http ||= DATSwagger::HTTP.new options.zip(options.map { |e| @config.send(e) }).to_h
-  end
-
-  # make a get call
-  # params
-  # {
-  #     headers:{},
-  #     qs_params: {},
-  #     body: {}
-  # }
-  def get(resource = 'options', params = {})
-    process_call(:get, resource, params)
-  end
-
-  # make a post call
-  # params
-  # {
-  #     headers:{},
-  #     qs_params: {},
-  #     body: {}
-  # }
-  def post(resource = 'options', params = {})
-    process_call(:post, resource, params)
-  end
-
-  # make a patch call
-  # params
-  # {
-  #     headers:{},
-  #     qs_params: {},
-  #     body: {}
-  # }
-  def patch(resource = 'options', params = {})
-    process_call(:patch, resource, params)
-  end
-
-  # make a put call
-  # params
-  # {
-  #     headers:{},
-  #     qs_params: {},
-  #     body: {}
-  # }
-  def put(resource = 'options', params = {})
-    process_call(:put, resource, params)
-  end
-
-  # make a delete call
-  # params
-  # {
-  #     headers:{},
-  #     qs_params: {},
-  #     body: {}
-  # }
-  def delete(resource = 'options', params = {})
-    process_call(:delete, resource, params)
-  end
-
-  private
-
-  # list out all the available paths
-  def list_paths(paths)
-    paths.each do |path|
-      path.each do |name, _opts|
-        puts name
+      def instance(path: Client.config.swagger_file_path, parsers: {json: DAT::Swagger::JSONParser, yaml: DAT::Swagger::YAMLParser})
+        @instance ||= new file: path, parsers: parsers
       end
-    end
-  end
 
-  # pretty output for the contents of a hash
-  def list_hash(hash, index = 0)
-    hash.each_key do |key|
-      key_space = index > 0 ? ' ' * index : ''
-      value_space = key_space + '  '
-      puts "#{key_space}#{key}:"
-      value = hash[key]
-      if value.is_a? Hash
-        list_hash value, index += 1
-      elsif value.is_a? Array
-        value.each do |value|
-          if value.is_a? Hash
-            list_hash value, index += 1
-          else
-            puts "#{value_space}#{value}"
-          end
-        end
+      def configure
+        @config ||= DAT::Swagger::Config.new
+        yield(@config) if block_given?
+        @config
+      end
+
+      # get the instance of the config object
+      def config
+        @config ||= DAT::Swagger::Config.new
+      end
+
+      # reset the config object
+      def reset_config
+        @config = DAT::Swagger::Config.new
+      end
+
+      def models
+        instance.models
+      end
+
+      def list_resources
+        instance.list_resources
+      end
+
+      def parse_file(path:)
+        instance.parse_file path: path
+      end
+
+    end
+
+    attr_reader :parsed_swagger
+    def initialize(
+                    file: Client.config.swagger_file_path,
+                    parsers: {json: DAT::Swagger::JSONParser, yaml: DAT::Swagger::YAMLParser})
+      @file = file
+      @parser = parsers
+      parse_file path: file unless file.nil?
+    end
+
+    def models
+      check_swagger
+      @parsed_swagger.models.dup
+    end
+
+    def list_resources
+      check_swagger
+      list_paths
+    end
+
+    def parse_file(path: @file)
+      raise ArgumentError, 'Swagger file path has not been set or passed in.' if path.nil?
+      if path.include? '.json'
+        return @parsed_swagger = @parser[:json].parse(path: path)
+      elsif path.include?('.yaml') || file.include?('.yml')
+        return @parsed_swagger = @parser[:yaml].parse(path: path)
       else
-        puts "#{value_space}#{value}"
+        raise ArgumentError, "#{file} is not a valid file format."
       end
     end
-  end
 
-  # get the paths associated with the provided http method
-  def get_path(http_method, path)
-    config.send(http_method).each do |_path|
-      return _path if _path.keys[0] == path
+    private
+
+    def check_swagger
+      raise RuntimeError, 'No Swagger file has been parsed yet' if @parsed_swagger.nil?
     end
-    nil
-  end
 
-  # process and make the http call
-  def process_call(http_method, resource, params = {})
-    if config.swagger_file_loaded?
-      if resource == 'options'
-        puts 'Here are the available options'
-        list_paths(@config.send(http_method))
-        return nil
+    # list out all the available paths
+    def list_paths(method: nil)
+      if method.nil?
+        list_hash @parsed_swagger.routes
+      else
+        list_hash @parsed_swagger.routes[method]
       end
-      path = get_path(http_method.to_sym, resource)
-      if path.nil?
-        raise "#{resource} is not a valid get resource. Call #get to see a list of available paths"
-      end
-      if resource.include?('{')
-        resource_params = resource.scan(/{\w+}/)
-        resource_params.each do |param|
-          _param = param.delete('{')
-          _param.delete!('}')
-          if params[_param.to_sym]
-            resource.gsub!(param, params[_param.to_sym])
-          elsif params[_param]
-            resource.gsub!(param, params[_param])
-          else
-            raise "#{resource} includes resource parameters but none were passed in."
+      nil
+    end
+
+    # pretty output for the contents of a hash
+    def list_hash(hash, index = 0)
+      hash.each_key do |key|
+        key_space = index > 0 ? ' ' * index : ''
+        value_space = key_space + '  '
+        puts "#{key_space}#{key}:"
+        value = hash[key]
+        if value.is_a? Hash
+          list_hash value, index += 1
+        elsif value.is_a? Array
+          value.each do |value|
+            if value.is_a? Hash
+              list_hash value, index += 1
+            else
+              puts "#{value_space}#{value}"
+            end
           end
+        else
+          puts "#{value_space}#{value}"
         end
       end
-      if params.is_a?(String) && params.casecmp('help').zero?
-        list_hash(path)
-        true
-      else
-        # make the call
-        Response.new http.send(http_method, resource, params), path
-      end
-    else
-      if resource == 'options'
-        puts 'No swagger file was loaded. No defined routes'
-        return nil
-      end
-      http.send(http_method, resource, params)
     end
   end
-
 end
