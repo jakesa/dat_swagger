@@ -5,11 +5,11 @@ module DAT
     class ModelBuilder
       class << self
         # definitions needs to be a hash with the key being the name and the value being a hash containing the keys [:required, :properties, :description]
-        def build(definitions:)
+        def build(definitions:, super_class: DAT::Swagger::BaseModel)
           models = []
           definitions.each do |name, attr_hash|
             name = name[0].capitalize + name.slice(1..name.length-1)
-            model = Class.new(DAT::Swagger::BaseModel)
+            model = Class.new(super_class)
             set_model name: name, obj: model
             define_model name: name, methods: {
                 define_fields: {fields: attr_hash[:properties].keys},
