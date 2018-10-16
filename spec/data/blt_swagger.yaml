@@ -12,7 +12,7 @@ info:
   contact:
     name: ''
     email: ''
-host: api.test.dat.com
+host: localhost:3000
 basePath: /blt
 schemes:
   - https

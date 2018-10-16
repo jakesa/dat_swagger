@@ -41,7 +41,7 @@ module DAT::Swagger
       @models.dup
     end
 
-    def parse(path: DAT::Swagger::Client.config.swagger_file_path)
+    def parse(path: @config.swagger_file_path)
       data = load_file path: path
       generate_routes routes: data[:paths]
       generate_models definitions: data[:definitions]
