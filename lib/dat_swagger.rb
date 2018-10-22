@@ -60,6 +60,11 @@ module DAT::Swagger
       list_paths
     end
 
+    def routes
+      check_swagger
+      parsed_swagger.routes
+    end
+
     def parse_file(path: @file)
       raise ArgumentError, 'Swagger file path has not been set or passed in.' if path.nil?
       if path.include? '.json'

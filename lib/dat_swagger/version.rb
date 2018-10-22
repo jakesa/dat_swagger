@@ -38,7 +38,7 @@ module DAT
 
     attr_accessor :major, :minor, :patch
 
-    def initialize(path: File.absolute_path(File.join(__dir__,'./data/version.json')))
+    def initialize(path: File.absolute_path(File.join(__dir__,'./version.json')))
       @path = path
       load_version file_path: @path
     end

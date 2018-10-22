@@ -1,4 +1,6 @@
 require 'bundler'
+require 'bundler/gem_tasks'
+require 'rspec/core/rake_task'
 
 helper = Bundler::GemHelper.new
 
@@ -10,10 +12,10 @@ task :test, :file do |tsk, args|
   end
 end
 
-task :build do
-  helper.gemspec.version = DAT::Version.to_s
-  helper.build_gem
-end
+# task :build do
+#   helper.gemspec.version = DAT::Version.to_s
+#   helper.build_gem
+# end
 
 task :bump,[:segment] do |tsk, args|
   case args[:segment].to_sym

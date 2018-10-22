@@ -42,18 +42,24 @@ describe DAT::Swagger::Client do
     end
 
     it 'should respond to #models' do
-      expect(DAT::Swagger::Client.respond_to? :models).to be true
+      expect(@client.respond_to? :models).to be true
     end
 
     it 'should respond to #list_resources' do
-      expect(DAT::Swagger::Client.respond_to? :list_resources).to be true
+      expect(@client.respond_to? :list_resources).to be true
     end
 
     it 'should respond to #parse_file' do
-      expect(DAT::Swagger::Client.respond_to? :parse_file).to be true
+      expect(@client.respond_to? :parse_file).to be true
     end
 
+    it 'should return models' do
+      expect(@client.models.empty?).to be false
+    end
 
+    it 'should have parsed routes' do
+      expect(@client.routes.empty?).to be false
+    end
 
   end
 

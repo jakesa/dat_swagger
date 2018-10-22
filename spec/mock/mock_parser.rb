@@ -8,7 +8,7 @@ class MockParser
       ['TestModel', 'OtherTestModel']
     end
 
-    def routes(method:)
+    def routes(method: nil)
       {
           get:{
               route1: {
@@ -22,6 +22,10 @@ class MockParser
               }
           }
       }
+    end
+
+    def parse(path:)
+      self
     end
 
   end
